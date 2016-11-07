@@ -70,6 +70,7 @@ public abstract class BrowserManager {
 			.valueOf("x" + System.getProperty("sun.arch.data.model"));
 	private static final String MY_OS_NAME = getOsName();
 	private static final String VERSION_PROPERTY = "wdm.driverVersion";
+	private static final String ARCH_PROPERTY = "wdm.architecture";
 
 	public abstract List<URL> getDrivers() throws Exception;
 
@@ -84,11 +85,11 @@ public abstract class BrowserManager {
 	protected String versionToDownload;
 
 	public void setup() {
-		setup(DEFAULT_ARCH, DriverVersion.NOT_SPECIFIED.name());
+		setup(getArchVersion(), DriverVersion.NOT_SPECIFIED.name());
 	}
 
 	public void setup(String version) {
-		setup(DEFAULT_ARCH, version);
+		setup(getArchVersion(), version);
 	}
 
 	public void setup(Architecture arch) {
@@ -108,6 +109,22 @@ public abstract class BrowserManager {
 			this.getClass().newInstance().manage(arch, version);
 		} catch (InstantiationException | IllegalAccessException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	private Architecture getArchVersion() {
+		String arch = WdmConfig.getString(ARCH_PROPERTY);
+		if (arch == null || arch.equals("DEFAULT")) {
+			return DEFAULT_ARCH;
+		}
+
+		if (arch.equals("32") || arch.equalsIgnoreCase("x32")) {
+			return Architecture.x32;
+		} else if (arch.equals("64") || arch.equalsIgnoreCase("x64")) {
+			return Architecture.x64;
+		} else {
+			log.info("Unknown arch version: %s. Using system derived value", arch);
+			return DEFAULT_ARCH;
 		}
 	}
 
